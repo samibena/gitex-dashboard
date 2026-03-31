@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GITEX Africa 2026 — Gestion Projet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0b0e14;
+  --surface: #131720;
+  --surface2: #1a1f2e;
+  --border: #252b3b;
+  --text: #e2e8f0;
+  --text2: #8892a8;
+  --accent: #00d4aa;
+  --accent2: #00b894;
+  --accent-glow: rgba(0,212,170,0.15);
+  --red: #ff6b6b;
+  --orange: #ffa94d;
+  --green: #51cf66;
+  --blue: #339af0;
+  --radius: 10px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+.light {
+  --bg: #f0f2f5;
+  --surface: #ffffff;
+  --surface2: #f7f8fa;
+  --border: #e0e4ea;
+  --text: #1a1a2e;
+  --text2: #6b7280;
+  --accent: #00a88a;
+  --accent2: #009e7e;
+  --accent-glow: rgba(0,168,138,0.1);
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; transition:background .3s,color .3s; }
+input,select,textarea,button { font-family:inherit; }
+a { color:var(--accent); }
+
+/* Login */
+#login-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; background:var(--bg); }
+.login-box { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:48px 40px; width:380px; text-align:center; box-shadow:var(--shadow); }
+.login-box h1 { font-size:1.5rem; font-weight:800; margin-bottom:6px; }
+.login-box .sub { color:var(--text2); font-size:.85rem; margin-bottom:28px; }
+.login-box .logo-icon { font-size:2.8rem; margin-bottom:16px; display:block; }
+.pwd-wrap { position:relative; margin-bottom:16px; }
+.pwd-wrap input { width:100%; padding:12px 44px 12px 16px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:.95rem; outline:none; }
+.pwd-wrap input:focus { border-color:var(--accent); }
+.pwd-wrap .eye-btn { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text2); cursor:pointer; font-size:1.1rem; }
+.login-box button.login-btn { width:100%; padding:12px; background:var(--accent); color:#0b0e14; border:none; border-radius:8px; font-weight:700; font-size:.95rem; cursor:pointer; transition:opacity .2s; }
+.login-box button.login-btn:hover { opacity:.85; }
+.login-err { color:var(--red); font-size:.82rem; margin-top:10px; display:none; }
+
+/* App */
+#app { display:none; }
+header { background:var(--surface); border-bottom:1px solid var(--border); padding:14px 24px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+.header-left { display:flex; align-items:center; gap:14px; cursor:pointer; }
+.header-left .logo { font-size:1.6rem; }
+.header-left h1 { font-size:1.15rem; font-weight:800; letter-spacing:-.02em; }
+.header-left .sub { font-size:.72rem; color:var(--text2); margin-top:1px; }
+.header-right { display:flex; align-items:center; gap:12px; }
+.sync-dot { width:9px; height:9px; border-radius:50%; display:inline-block; }
+.sync-dot.on { background:var(--green); box-shadow:0 0 6px var(--green); }
+.sync-dot.off { background:var(--red); box-shadow:0 0 6px var(--red); }
+.icon-btn { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:7px 10px; cursor:pointer; color:var(--text); font-size:.9rem; transition:background .2s; }
+.icon-btn:hover { background:var(--border); }
+
+/* Tabs */
+.tabs { display:flex; gap:0; background:var(--surface); border-bottom:1px solid var(--border); padding:0 24px; }
+.tab-btn { padding:12px 22px; background:none; border:none; border-bottom:2px solid transparent; color:var(--text2); font-weight:600; font-size:.88rem; cursor:pointer; transition:color .2s, border-color .2s; }
+.tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); }
+.tab-btn:hover { color:var(--text); }
+
+/* Content */
+.content { max-width:1280px; margin:0 auto; padding:20px 24px 60px; }
+
+/* KPI Cards */
+.kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+.kpi-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; }
+.kpi-card .kpi-label { font-size:.75rem; color:var(--text2); text-transform:uppercase; letter-spacing:.04em; font-weight:600; margin-bottom:6px; }
+.kpi-card .kpi-val { font-size:1.6rem; font-weight:800; font-family:'JetBrains Mono',monospace; }
+.kpi-card .kpi-sub { font-size:.78rem; color:var(--text2); margin-top:4px; }
+
+/* Cards */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:16px; }
+.card h3 { font-size:.95rem; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+.card h3 .badge { background:var(--accent-glow); color:var(--accent); font-size:.72rem; padding:3px 8px; border-radius:20px; font-weight:600; }
+
+/* Tables */
+table { width:100%; border-collapse:collapse; font-size:.84rem; }
+th { text-align:left; padding:8px 10px; color:var(--text2); font-weight:600; font-size:.73rem; text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid var(--border); }
+td { padding:8px 10px; border-bottom:1px solid var(--border); vertical-align:middle; }
+tr:last-child td { border-bottom:none; }
+td input, td select { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:5px 8px; color:var(--text); font-size:.84rem; width:100%; }
+td input:focus, td select:focus { border-color:var(--accent); outline:none; }
+td input[type="number"] { width:90px; text-align:right; font-family:'JetBrains Mono',monospace; }
+.num { text-align:right; font-family:'JetBrains Mono',monospace; font-weight:600; }
+.del-btn { background:none; border:none; color:var(--red); cursor:pointer; font-size:1rem; opacity:.6; transition:opacity .2s; }
+.del-btn:hover { opacity:1; }
+
+/* Add btn */
+.add-row { background:var(--surface2); border:1px dashed var(--border); border-radius:8px; padding:10px; text-align:center; cursor:pointer; color:var(--accent); font-weight:600; font-size:.84rem; margin-top:10px; transition:background .2s; }
+.add-row:hover { background:var(--accent-glow); }
+
+/* Subtotal */
+.subtotal { text-align:right; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1rem; padding:12px 10px 0; color:var(--accent); }
+
+/* Recap box */
+.recap { background:var(--surface2); border:1px solid var(--accent); border-radius:var(--radius); padding:20px; margin-top:20px; }
+.recap-row { display:flex; justify-content:space-between; padding:8px 0; font-size:.92rem; }
+.recap-row.total { border-top:2px solid var(--border); margin-top:8px; padding-top:12px; font-weight:800; font-size:1.1rem; }
+.margin-green { color:var(--green); }
+.margin-orange { color:var(--orange); }
+.margin-red { color:var(--red); }
+
+/* Sale price input */
+.sale-input { display:flex; align-items:center; gap:10px; margin-bottom:4px; }
+.sale-input input { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:1.1rem; font-weight:700; width:200px; text-align:right; }
+.sale-input input:focus { border-color:var(--accent); outline:none; }
+.sale-input span { color:var(--text2); font-size:.85rem; }
+
+/* Livrables */
+.filter-bar { display:flex; gap:8px; margin-bottom:18px; }
+.filter-btn { padding:7px 16px; border-radius:20px; border:1px solid var(--border); background:var(--surface2); color:var(--text2); font-size:.8rem; font-weight:600; cursor:pointer; transition:all .2s; }
+.filter-btn.active { background:var(--accent); color:#0b0e14; border-color:var(--accent); }
+.day-section h3 { font-size:.92rem; margin-bottom:12px; font-weight:700; color:var(--accent); }
+.livrable-row { display:grid; grid-template-columns:1fr 70px 120px 130px 36px; gap:8px; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); }
+.livrable-row.done { opacity:.45; }
+.livrable-row input, .livrable-row select { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:6px 8px; color:var(--text); font-size:.84rem; }
+.livrable-row select { padding:6px 4px; }
+.status-tag { display:inline-block; padding:3px 10px; border-radius:12px; font-size:.72rem; font-weight:600; text-align:center; }
+.status-attente { background:rgba(255,107,107,.15); color:var(--red); }
+.status-encours { background:rgba(255,169,77,.15); color:var(--orange); }
+.status-termine { background:rgba(81,207,102,.15); color:var(--green); }
+
+/* Timeline */
+.timeline-item { display:grid; grid-template-columns:110px 1fr 36px 36px; gap:10px; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); }
+.timeline-item input[type="date"] { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:6px 8px; color:var(--text); font-size:.84rem; }
+.timeline-item input[type="text"] { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:6px 10px; color:var(--text); font-size:.84rem; flex:1; }
+.check-btn { width:28px; height:28px; border-radius:50%; border:2px solid var(--border); background:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:.8rem; transition:all .2s; color:transparent; }
+.check-btn.checked { border-color:var(--green); background:var(--green); color:#fff; }
+
+/* Modal */
+.modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.55); z-index:200; align-items:center; justify-content:center; }
+.modal-overlay.show { display:flex; }
+.modal-box { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:28px; width:400px; max-width:92vw; }
+.modal-box h3 { margin-bottom:16px; font-size:1rem; }
+.modal-box button { margin-top:14px; }
+
+/* Responsive */
+@media(max-width:900px){
+  .kpi-row { grid-template-columns:repeat(2,1fr); }
+}
+@media(max-width:600px){
+  .kpi-row { grid-template-columns:1fr; }
+  .tabs { overflow-x:auto; }
+  .livrable-row { grid-template-columns:1fr 50px 90px 100px 30px; font-size:.78rem; }
+  header { padding:10px 14px; }
+  .content { padding:14px; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <span class="logo-icon">🌍</span>
+    <h1>GITEX Africa 2026</h1>
+    <p class="sub">Dashboard Gestion Projet — Déclic Communication</p>
+    <div class="pwd-wrap">
+      <input type="password" id="pwd" placeholder="Mot de passe" autocomplete="off" data-form-type="other" onkeydown="if(event.key==='Enter')window.doLogin()">
+      <button class="eye-btn" onclick="window.togglePwd()" type="button">👁</button>
+    </div>
+    <button class="login-btn" onclick="window.doLogin()">Accéder au dashboard</button>
+    <p class="login-err" id="lerr">Mot de passe incorrect</p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header>
+    <div class="header-left" onclick="window.showTab('budget')">
+      <span class="logo">🌍</span>
+      <div>
+        <h1>GITEX Africa 2026</h1>
+        <div class="sub">Budget dynamique • Suivi livrables • Sync temps réel</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="sync-dot off" id="syncDot" title="Firebase sync"></span>
+      <button class="icon-btn" onclick="window.toggleTheme()" title="Dark/Light mode">🌓</button>
+      <button class="icon-btn" onclick="window.exportJSON()" title="Export JSON">📥</button>
+      <button class="icon-btn" onclick="document.getElementById('importFile').click()" title="Import JSON">📤</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="window.importJSON(event)">
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="window.showTab('budget')">💰 Budget</button>
+    <button class="tab-btn" onclick="window.showTab('livrables')">📋 Livrables</button>
+    <button class="tab-btn" onclick="window.showTab('timeline')">📅 Timeline</button>
+  </div>
+
+  <div class="content">
+    <!-- KPI -->
+    <div class="kpi-row">
+      <div class="kpi-card"><div class="kpi-label">Coût total</div><div class="kpi-val" id="kpiCost">—</div></div>
+      <div class="kpi-card"><div class="kpi-label">Marge brute</div><div class="kpi-val" id="kpiMargin">—</div><div class="kpi-sub" id="kpiMarginPct"></div></div>
+      <div class="kpi-card"><div class="kpi-label">Livrables</div><div class="kpi-val" id="kpiLiv">—</div><div class="kpi-sub" id="kpiLivPct"></div></div>
+      <div class="kpi-card"><div class="kpi-label">Alertes</div><div class="kpi-val" id="kpiAlerts">0</div><div class="kpi-sub" id="kpiAlertMsg"></div></div>
+    </div>
+
+    <!-- TAB: Budget -->
+    <div id="tab-budget">
+      <div class="card">
+        <h3>💵 Prix de vente client</h3>
+        <div class="sale-input">
+          <input type="number" id="salePrice" value="165000" onchange="window.onSalePriceChange(this.value)">
+          <span>MAD HT</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>👥 Honoraires équipe <span class="badge" id="badgeHono">—</span></h3>
+        <table><thead><tr><th>#</th><th>Poste</th><th>Jours</th><th>TJ (MAD)</th><th>Total</th><th></th></tr></thead><tbody id="tblHono"></tbody></table>
+        <div class="subtotal" id="subHono">—</div>
+        <div class="add-row" onclick="window.addHono()">+ Ajouter un profil</div>
+      </div>
+
+      <div class="card">
+        <h3>🚂 Logistique & déplacements <span class="badge" id="badgeLogi">—</span></h3>
+        <table><thead><tr><th>#</th><th>Item</th><th>Qté</th><th>PU (MAD)</th><th>Total</th><th></th></tr></thead><tbody id="tblLogi"></tbody></table>
+        <div class="subtotal" id="subLogi">—</div>
+        <div class="add-row" onclick="window.addLogi()">+ Ajouter un item</div>
+      </div>
+
+      <div class="card">
+        <h3>🎥 Équipement & licences <span class="badge" id="badgeEquip">—</span></h3>
+        <table><thead><tr><th>#</th><th>Item</th><th>Qté</th><th>PU (MAD)</th><th>Total</th><th></th></tr></thead><tbody id="tblEquip"></tbody></table>
+        <div class="subtotal" id="subEquip">—</div>
+        <div class="add-row" onclick="window.addEquip()">+ Ajouter un item</div>
+      </div>
+
+      <div class="card">
+        <h3>📎 Divers & coordination <span class="badge" id="badgeDiv">—</span></h3>
+        <table><thead><tr><th>#</th><th>Item</th><th>Qté</th><th>PU (MAD)</th><th>Total</th><th></th></tr></thead><tbody id="tblDiv"></tbody></table>
+        <div class="subtotal" id="subDiv">—</div>
+        <div class="add-row" onclick="window.addDiv()">+ Ajouter un item</div>
+      </div>
+
+      <div class="recap" id="recapBox"></div>
+    </div>
+
+    <!-- TAB: Livrables -->
+    <div id="tab-livrables" style="display:none">
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="window.setFilter('all',this)">Tous</button>
+        <button class="filter-btn" onclick="window.setFilter('attente',this)">En attente</button>
+        <button class="filter-btn" onclick="window.setFilter('encours',this)">En cours</button>
+        <button class="filter-btn" onclick="window.setFilter('termine',this)">Terminé</button>
+      </div>
+      <div id="livContent"></div>
+    </div>
+
+    <!-- TAB: Timeline -->
+    <div id="tab-timeline" style="display:none">
+      <div class="card">
+        <h3>📅 Jalons critiques</h3>
+        <div id="timelineContent"></div>
+        <div class="add-row" onclick="window.addMilestone()">+ Ajouter un jalon</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box">
+    <h3 id="confirmTitle">Confirmer la suppression</h3>
+    <p id="confirmMsg" style="color:var(--text2);font-size:.88rem;"></p>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="icon-btn" onclick="window.closeConfirm()">Annuler</button>
+      <button class="icon-btn" style="background:var(--red);color:#fff;border-color:var(--red);" onclick="window.execConfirm()">Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRE-MODULE login script -->
+<script>
+window.doLogin=function(){
+  var PASS='gitex2026declic';
+  if(document.getElementById('pwd').value===PASS){sessionStorage.setItem('gx_auth','1');location.reload();}
+  else{document.getElementById('lerr').style.display='block';}
+};
+window.togglePwd=function(){
+  var p=document.getElementById('pwd');
+  p.type=p.type==='password'?'text':'password';
+};
+</script>
+
+<!-- MAIN MODULE -->
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import{getFirestore,doc,getDoc,setDoc,onSnapshot}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ─── AUTH CHECK ───
+if(sessionStorage.getItem('gx_auth')!=='1'){
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('app').style.display='none';
+}else{
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+}
+
+// Override login for module context
+window.doLogin=function(){
+  const PASS='gitex2026declic';
+  if(document.getElementById('pwd').value===PASS){
+    sessionStorage.setItem('gx_auth','1');
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+  } else {
+    document.getElementById('lerr').style.display='block';
+  }
+};
+
+// ─── FIREBASE ───
+const firebaseConfig={
+  apiKey:"AIzaSyDgapEDTBcmajJ0fTYed77OnP5Y3H7jNzk",
+  authDomain:"gitex-dashboard-2026.firebaseapp.com",
+  projectId:"gitex-dashboard-2026",
+  storageBucket:"gitex-dashboard-2026.firebasestorage.app",
+  messagingSenderId:"594849612637",
+  appId:"1:594849612637:web:d74f6a8a293b05bb999eb4"
+};
+let fb,db,docRef,unsub;
+let firebaseReady=false;
+try{
+  fb=initializeApp(firebaseConfig);
+  db=getFirestore(fb);
+  docRef=doc(db,'dashboard','main');
+  firebaseReady=firebaseConfig.apiKey!=='REMPLACER';
+}catch(e){console.warn('Firebase init failed',e);}
+
+// ─── DATA ───
+const SEED={
+  salePrice:165000,
+  hono:[
+    {id:'h1',name:'PM & Content Creator Lead',days:5,tj:2500},
+    {id:'h2',name:'Content Creators (×4)',days:12,tj:1500},
+    {id:'h3',name:'Senior Videographer',days:4,tj:3000},
+    {id:'h4',name:'Video Editor',days:6,tj:2200},
+    {id:'h5',name:'Motion Graphic Designer',days:1,tj:12000},
+    {id:'h6',name:'Content Specialist',days:1,tj:6000},
+    {id:'h7',name:'Account Executive',days:10,tj:3000}
+  ],
+  logi:[
+    {id:'l1',name:'Train AR Casablanca-Marrakech',qty:14,pu:250},
+    {id:'l2',name:'Hôtel (nuitées)',qty:21,pu:700},
+    {id:'l3',name:'Per diems',qty:21,pu:350},
+    {id:'l4',name:'Transport local',qty:3,pu:800}
+  ],
+  equip:[
+    {id:'e1',name:'Location caméras',qty:3,pu:1500},
+    {id:'e2',name:'Micros + lumière',qty:1,pu:2500},
+    {id:'e3',name:'Gimbals',qty:4,pu:800},
+    {id:'e4',name:'CapCut Pro',qty:3,pu:400},
+    {id:'e5',name:'Adobe CC',qty:2,pu:600},
+    {id:'e6',name:'Artlist',qty:1,pu:1500},
+    {id:'e7',name:'Stockage cloud',qty:1,pu:800}
+  ],
+  divers:[
+    {id:'d1',name:'Coordination pré-event',qty:1,pu:5000},
+    {id:'d2',name:'Coordination post-event',qty:1,pu:4000}
+  ],
+  livrables:[
+    {id:'v1',day:1,name:'Stories J1',qty:20,resp:'',status:'attente'},
+    {id:'v2',day:1,name:'Reels J1',qty:3,resp:'',status:'attente'},
+    {id:'v3',day:1,name:'Interviews J1',qty:4,resp:'',status:'attente'},
+    {id:'v4',day:1,name:'Posts feed J1',qty:2,resp:'',status:'attente'},
+    {id:'v5',day:2,name:'Stories J2',qty:20,resp:'',status:'attente'},
+    {id:'v6',day:2,name:'Reels J2',qty:3,resp:'',status:'attente'},
+    {id:'v7',day:2,name:'Interviews J2',qty:4,resp:'',status:'attente'},
+    {id:'v8',day:2,name:'Posts feed J2',qty:2,resp:'',status:'attente'},
+    {id:'v9',day:2,name:'Wrap-up J1',qty:1,resp:'',status:'attente'},
+    {id:'v10',day:3,name:'Stories J3',qty:20,resp:'',status:'attente'},
+    {id:'v11',day:3,name:'Reels J3',qty:3,resp:'',status:'attente'},
+    {id:'v12',day:3,name:'Interviews J3',qty:4,resp:'',status:'attente'},
+    {id:'v13',day:3,name:'Posts feed J3',qty:2,resp:'',status:'attente'},
+    {id:'v14',day:3,name:'Wrap-up J2',qty:1,resp:'',status:'attente'}
+  ],
+  milestones:[
+    {id:'m1',date:'2026-03-27',text:'PM Lead + Videographer confirmés',done:false},
+    {id:'m2',date:'2026-03-29',text:'Toute équipe confirmée',done:false},
+    {id:'m3',date:'2026-03-31',text:'Brief collectif équipe',done:false},
+    {id:'m4',date:'2026-04-03',text:'Logistique réservée',done:false},
+    {id:'m5',date:'2026-04-05',text:'Templates motion graphics',done:false},
+    {id:'m6',date:'2026-04-06',text:'Arrivée terrain Marrakech',done:false}
+  ]
+};
+
+let D=JSON.parse(JSON.stringify(SEED));
+let currentFilter='all';
+let confirmCb=null;
+let saving=false;
+
+// Expose D, save, uid
+Object.defineProperty(window,'D',{get:()=>D,set:v=>{D=v;}});
+
+function uid(){return'_'+Math.random().toString(36).substr(2,9);}
+window.uid=uid;
+
+function fmt(n){return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ');}
+
+function ensureData(){
+  if(!D)D=JSON.parse(JSON.stringify(SEED));
+  if(!D.salePrice)D.salePrice=165000;
+  ['hono','logi','equip','divers','livrables','milestones'].forEach(k=>{
+    if(!Array.isArray(D[k])){
+      if(D[k]&&typeof D[k]==='object'){
+        D[k]=Object.values(D[k]);
+      }else{
+        D[k]=JSON.parse(JSON.stringify(SEED[k]));
+      }
+    }
+  });
+}
+
+// ─── SAVE ───
+async function save(){
+  if(!firebaseReady||saving)return;
+  saving=true;
+  try{
+    await setDoc(docRef,JSON.parse(JSON.stringify(D)));
+    syncOn();
+  }catch(e){
+    console.error('Save error',e);
+    syncOff();
+  }
+  saving=false;
+}
+window.save=save;
+
+function syncOn(){document.getElementById('syncDot').className='sync-dot on';}
+function syncOff(){document.getElementById('syncDot').className='sync-dot off';}
+
+// ─── FIREBASE LISTENER ───
+if(firebaseReady){
+  getDoc(docRef).then(snap=>{
+    if(snap.exists()){D=snap.data();}
+    else{setDoc(docRef,JSON.parse(JSON.stringify(D)));}
+    ensureData();
+    renderAll();
+    syncOn();
+  }).catch(e=>{console.warn(e);ensureData();renderAll();syncOff();});
+  unsub=onSnapshot(docRef,snap=>{
+    if(snap.exists()&&!saving){D=snap.data();ensureData();renderAll();syncOn();}
+  },e=>{console.warn(e);syncOff();});
+}else{
+  ensureData();
+  renderAll();
+}
+
+// ─── THEME ───
+if(localStorage.getItem('gx_theme')==='light')document.body.classList.add('light');
+window.toggleTheme=function(){
+  document.body.classList.toggle('light');
+  localStorage.setItem('gx_theme',document.body.classList.contains('light')?'light':'dark');
+};
+
+// ─── TABS ───
+window.showTab=function(t){
+  ['budget','livrables','timeline'].forEach(x=>{
+    document.getElementById('tab-'+x).style.display=x===t?'block':'none';
+  });
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>{
+    b.classList.toggle('active',['budget','livrables','timeline'][i]===t);
+  });
+};
+
+// ─── CONFIRM MODAL ───
+function showConfirm(msg,cb){
+  document.getElementById('confirmMsg').textContent=msg;
+  document.getElementById('confirmModal').classList.add('show');
+  confirmCb=cb;
+}
+window.closeConfirm=function(){
+  document.getElementById('confirmModal').classList.remove('show');
+  confirmCb=null;
+};
+window.execConfirm=function(){
+  if(confirmCb)confirmCb();
+  window.closeConfirm();
+};
+
+// ─── EXPORT / IMPORT ───
+window.exportJSON=function(){
+  const blob=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='gitex2026_backup_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+};
+window.importJSON=function(e){
+  const f=e.target.files[0];
+  if(!f)return;
+  const r=new FileReader();
+  r.onload=function(){
+    try{
+      D=JSON.parse(r.result);
+      ensureData();
+      renderAll();
+      save();
+    }catch(err){alert('Fichier JSON invalide');}
+  };
+  r.readAsText(f);
+  e.target.value='';
+};
+
+// ─── CALCULATE ───
+function calcTotals(){
+  ensureData();
+  const tHono=D.hono.reduce((s,r)=>s+(parseFloat(r.days)||0)*(parseFloat(r.tj)||0),0);
+  const tLogi=D.logi.reduce((s,r)=>s+(parseFloat(r.qty)||0)*(parseFloat(r.pu)||0),0);
+  const tEquip=D.equip.reduce((s,r)=>s+(parseFloat(r.qty)||0)*(parseFloat(r.pu)||0),0);
+  const tDiv=D.divers.reduce((s,r)=>s+(parseFloat(r.qty)||0)*(parseFloat(r.pu)||0),0);
+  const cost=tHono+tLogi+tEquip+tDiv;
+  const sale=parseFloat(D.salePrice)||0;
+  const margin=sale-cost;
+  const pct=sale>0?(margin/sale*100):0;
+  const totalLiv=D.livrables.length;
+  const doneLiv=D.livrables.filter(l=>l.status==='termine').length;
+  const livPct=totalLiv>0?(doneLiv/totalLiv*100):0;
+  let alerts=0,alertMsg='';
+  if(pct<10){alerts=2;alertMsg='⚠ Marge critique < 10%';}
+  else if(pct<15){alerts=1;alertMsg='⚠ Marge < 15%';}
+  else{alertMsg='✓ Marge saine';}
+  return{tHono,tLogi,tEquip,tDiv,cost,sale,margin,pct,totalLiv,doneLiv,livPct,alerts,alertMsg};
+}
+
+// ─── RENDER ALL ───
+function renderAll(){
+  ensureData();
+  const c=calcTotals();
+  // KPI
+  document.getElementById('kpiCost').textContent=fmt(c.cost)+' MAD';
+  const mColor=c.pct>=15?'margin-green':c.pct>=10?'margin-orange':'margin-red';
+  document.getElementById('kpiMargin').innerHTML=`<span class="${mColor}">${fmt(c.margin)} MAD</span>`;
+  document.getElementById('kpiMarginPct').innerHTML=`<span class="${mColor}">${c.pct.toFixed(1)}%</span>`;
+  document.getElementById('kpiLiv').textContent=`${c.doneLiv} / ${c.totalLiv}`;
+  document.getElementById('kpiLivPct').textContent=`${c.livPct.toFixed(0)}% complétés`;
+  document.getElementById('kpiAlerts').innerHTML=c.alerts>0?`<span style="color:var(--${c.alerts>1?'red':'orange'})">${c.alerts}</span>`:'<span style="color:var(--green)">0</span>';
+  document.getElementById('kpiAlertMsg').textContent=c.alertMsg;
+
+  // Sale price
+  document.getElementById('salePrice').value=D.salePrice;
+
+  // Tables
+  renderTable('tblHono',D.hono,'hono','days','tj');
+  renderTable('tblLogi',D.logi,'logi','qty','pu');
+  renderTable('tblEquip',D.equip,'equip','qty','pu');
+  renderTable('tblDiv',D.divers,'divers','qty','pu');
+
+  // Subtotals
+  document.getElementById('subHono').textContent=fmt(c.tHono)+' MAD';
+  document.getElementById('subLogi').textContent=fmt(c.tLogi)+' MAD';
+  document.getElementById('subEquip').textContent=fmt(c.tEquip)+' MAD';
+  document.getElementById('subDiv').textContent=fmt(c.tDiv)+' MAD';
+
+  // Badges
+  document.getElementById('badgeHono').textContent=fmt(c.tHono)+' MAD';
+  document.getElementById('badgeLogi').textContent=fmt(c.tLogi)+' MAD';
+  document.getElementById('badgeEquip').textContent=fmt(c.tEquip)+' MAD';
+  document.getElementById('badgeDiv').textContent=fmt(c.tDiv)+' MAD';
+
+  // Recap
+  document.getElementById('recapBox').innerHTML=`
+    <div class="recap-row"><span>Prix de vente client</span><span class="num">${fmt(c.sale)} MAD HT</span></div>
+    <div class="recap-row"><span>Honoraires équipe</span><span class="num">${fmt(c.tHono)} MAD</span></div>
+    <div class="recap-row"><span>Logistique & déplacements</span><span class="num">${fmt(c.tLogi)} MAD</span></div>
+    <div class="recap-row"><span>Équipement & licences</span><span class="num">${fmt(c.tEquip)} MAD</span></div>
+    <div class="recap-row"><span>Divers & coordination</span><span class="num">${fmt(c.tDiv)} MAD</span></div>
+    <div class="recap-row"><span><strong>Coût de revient total</strong></span><span class="num"><strong>${fmt(c.cost)} MAD</strong></span></div>
+    <div class="recap-row total"><span>Marge brute</span><span class="num ${mColor}"><strong>${fmt(c.margin)} MAD (${c.pct.toFixed(1)}%)</strong></span></div>
+  `;
+
+  // Livrables
+  renderLivrables();
+  // Timeline
+  renderTimeline();
+}
+
+// ─── TABLE RENDER ───
+function renderTable(tbodyId,arr,key,f1,f2){
+  const tbody=document.getElementById(tbodyId);
+  const isHono=key==='hono';
+  let html='';
+  arr.forEach((r,i)=>{
+    const total=(parseFloat(r[f1])||0)*(parseFloat(r[f2])||0);
+    html+=`<tr>
+      <td style="width:30px;color:var(--text2)">${i+1}</td>
+      <td><input type="text" value="${esc(r.name)}" onchange="window.editCell('${key}','${r.id}','name',this.value)"></td>
+      <td><input type="number" step="${isHono?'0.5':'1'}" value="${r[f1]}" onchange="window.editCell('${key}','${r.id}','${f1}',this.value)"></td>
+      <td><input type="number" value="${r[f2]}" onchange="window.editCell('${key}','${r.id}','${f2}',this.value)"></td>
+      <td class="num">${fmt(total)}</td>
+      <td><button class="del-btn" onclick="window.delRow('${key}','${r.id}','${esc(r.name)}')">✕</button></td>
+    </tr>`;
+  });
+  tbody.innerHTML=html;
+}
+
+function esc(s){return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
+// ─── CELL EDIT ───
+window.editCell=function(key,id,field,val){
+  ensureData();
+  const arr=key==='divers'?D.divers:D[key];
+  const item=arr.find(r=>r.id===id);
+  if(!item)return;
+  if(['days','tj','qty','pu'].includes(field))val=parseFloat(val)||0;
+  item[field]=val;
+  renderAll();
+  save();
+};
+
+// ─── SALE PRICE ───
+window.onSalePriceChange=function(v){
+  D.salePrice=parseFloat(v)||0;
+  renderAll();
+  save();
+};
+
+// ─── ADD ROWS ───
+window.addHono=function(){D.hono.push({id:uid(),name:'Nouveau profil',days:1,tj:1000});renderAll();save();};
+window.addLogi=function(){D.logi.push({id:uid(),name:'Nouvel item',qty:1,pu:0});renderAll();save();};
+window.addEquip=function(){D.equip.push({id:uid(),name:'Nouvel item',qty:1,pu:0});renderAll();save();};
+window.addDiv=function(){D.divers.push({id:uid(),name:'Nouvel item',qty:1,pu:0});renderAll();save();};
+
+// ─── DELETE ROW ───
+window.delRow=function(key,id,name){
+  showConfirm(`Supprimer "${name}" ?`,()=>{
+    const arr=key==='divers'?D.divers:D[key];
+    const idx=arr.findIndex(r=>r.id===id);
+    if(idx>=0)arr.splice(idx,1);
+    renderAll();
+    save();
+  });
+};
+
+// ─── LIVRABLES ───
+function renderLivrables(){
+  const days=[
+    {num:1,label:'Jour 1 — 7 avril'},
+    {num:2,label:'Jour 2 — 8 avril'},
+    {num:3,label:'Jour 3 — 9 avril'}
+  ];
+  let html='';
+  days.forEach(d=>{
+    let items=D.livrables.filter(l=>l.day===d.num);
+    if(currentFilter!=='all')items=items.filter(l=>l.status===currentFilter);
+    html+=`<div class="card day-section"><h3>📍 ${d.label}</h3>`;
+    items.forEach(l=>{
+      const isDone=l.status==='termine';
+      html+=`<div class="livrable-row${isDone?' done':''}">
+        <input type="text" value="${esc(l.name)}" onchange="window.editLiv('${l.id}','name',this.value)">
+        <input type="number" value="${l.qty}" style="width:60px" onchange="window.editLiv('${l.id}','qty',this.value)">
+        <input type="text" value="${esc(l.resp)}" placeholder="Responsable" onchange="window.editLiv('${l.id}','resp',this.value)">
+        <select onchange="window.editLiv('${l.id}','status',this.value)">
+          <option value="attente"${l.status==='attente'?' selected':''}>En attente</option>
+          <option value="encours"${l.status==='encours'?' selected':''}>En cours</option>
+          <option value="termine"${l.status==='termine'?' selected':''}>Terminé</option>
+        </select>
+        <button class="del-btn" onclick="window.delLiv('${l.id}','${esc(l.name)}')">✕</button>
+      </div>`;
+    });
+    html+=`<div class="add-row" onclick="window.addLiv(${d.num})">+ Ajouter un livrable</div></div>`;
+  });
+  document.getElementById('livContent').innerHTML=html;
+}
+
+window.editLiv=function(id,field,val){
+  const item=D.livrables.find(l=>l.id===id);
+  if(!item)return;
+  if(field==='qty')val=parseInt(val)||0;
+  item[field]=val;
+  renderAll();
+  save();
+};
+window.addLiv=function(day){
+  D.livrables.push({id:uid(),day,name:'Nouveau livrable',qty:1,resp:'',status:'attente'});
+  renderAll();
+  save();
+};
+window.delLiv=function(id,name){
+  showConfirm(`Supprimer "${name}" ?`,()=>{
+    D.livrables=D.livrables.filter(l=>l.id!==id);
+    renderAll();
+    save();
+  });
+};
+
+// ─── FILTER ───
+window.setFilter=function(f,btn){
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLivrables();
+};
+
+// ─── TIMELINE ───
+function renderTimeline(){
+  let html='';
+  D.milestones.forEach(m=>{
+    const dateVal=m.date&&/^\d{4}-\d{2}-\d{2}$/.test(m.date)?m.date:'';
+    html+=`<div class="timeline-item">
+      <input type="date" value="${dateVal}" onchange="window.editMs('${m.id}','date',this.value)">
+      <input type="text" value="${esc(m.text)}" onchange="window.editMs('${m.id}','text',this.value)">
+      <button class="check-btn${m.done?' checked':''}" onclick="window.toggleMs('${m.id}')">${m.done?'✓':''}</button>
+      <button class="del-btn" onclick="window.delMs('${m.id}','${esc(m.text)}')">✕</button>
+    </div>`;
+  });
+  document.getElementById('timelineContent').innerHTML=html;
+}
+
+window.editMs=function(id,field,val){
+  const m=D.milestones.find(x=>x.id===id);
+  if(m){m[field]=val;renderAll();save();}
+};
+window.toggleMs=function(id){
+  const m=D.milestones.find(x=>x.id===id);
+  if(m){m.done=!m.done;renderAll();save();}
+};
+window.addMilestone=function(){
+  D.milestones.push({id:uid(),date:'',text:'Nouveau jalon',done:false});
+  renderAll();
+  save();
+};
+window.delMs=function(id,text){
+  showConfirm(`Supprimer "${text}" ?`,()=>{
+    D.milestones=D.milestones.filter(m=>m.id!==id);
+    renderAll();
+    save();
+  });
+};
+
+// ─── INIT ───
+renderAll();
+
+</script>
+</body>
+</html>
