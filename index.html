@@ -217,6 +217,7 @@ td input[type="number"] { width:90px; text-align:right; font-family:'JetBrains M
       <button class="icon-btn" onclick="window.toggleTheme()" title="Dark/Light mode">🌓</button>
       <button class="icon-btn" onclick="window.exportJSON()" title="Export JSON">📥</button>
       <button class="icon-btn" onclick="document.getElementById('importFile').click()" title="Import JSON">📤</button>
+      <button class="icon-btn" onclick="window.resetData()" title="Réinitialiser les données" style="font-size:.75rem">🔄</button>
       <input type="file" id="importFile" accept=".json" style="display:none" onchange="window.importJSON(event)">
     </div>
   </header>
@@ -246,26 +247,26 @@ td input[type="number"] { width:90px; text-align:right; font-family:'JetBrains M
         </div>
       </div>
       <div class="card">
-        <h3>👥 Honoraires équipe <span class="badge" id="badgeHono">—</span> <span class="badge-pct" id="pctHono"></span></h3>
-        <table><thead><tr><th>#</th><th>Poste</th><th>Jours</th><th>TJ (MAD)</th><th>Total</th><th></th></tr></thead><tbody id="tblHono"></tbody></table>
+        <h3>👥 Dépenses équipe <span class="badge" id="badgeHono">—</span> <span class="badge-pct" id="pctHono"></span></h3>
+        <table><thead><tr><th>#</th><th>Poste</th><th>PU (MAD)</th><th>Jours</th><th>Perso</th><th>Total</th><th></th></tr></thead><tbody id="tblHono"></tbody></table>
         <div class="subtotal" id="subHono">—</div>
         <div class="add-row" onclick="window.addHono()">+ Ajouter un profil</div>
       </div>
       <div class="card">
-        <h3>🚂 Logistique & déplacements <span class="badge" id="badgeLogi">—</span> <span class="badge-pct" id="pctLogi"></span></h3>
-        <table><thead><tr><th>#</th><th>Item</th><th>Qté</th><th>PU (MAD)</th><th>Total</th><th></th></tr></thead><tbody id="tblLogi"></tbody></table>
+        <h3>🚂 Logistique & transport <span class="badge" id="badgeLogi">—</span> <span class="badge-pct" id="pctLogi"></span></h3>
+        <table><thead><tr><th>#</th><th>Item</th><th>PU (MAD)</th><th>Jours</th><th>Perso</th><th>Total</th><th></th></tr></thead><tbody id="tblLogi"></tbody></table>
         <div class="subtotal" id="subLogi">—</div>
         <div class="add-row" onclick="window.addLogi()">+ Ajouter un item</div>
       </div>
       <div class="card">
-        <h3>🎥 Équipement & licences <span class="badge" id="badgeEquip">—</span> <span class="badge-pct" id="pctEquip"></span></h3>
-        <table><thead><tr><th>#</th><th>Item</th><th>Qté</th><th>PU (MAD)</th><th>Total</th><th></th></tr></thead><tbody id="tblEquip"></tbody></table>
+        <h3>🎥 Matériel & extra <span class="badge" id="badgeEquip">—</span> <span class="badge-pct" id="pctEquip"></span></h3>
+        <table><thead><tr><th>#</th><th>Item</th><th>PU (MAD)</th><th>Jours</th><th>Perso</th><th>Total</th><th></th></tr></thead><tbody id="tblEquip"></tbody></table>
         <div class="subtotal" id="subEquip">—</div>
         <div class="add-row" onclick="window.addEquip()">+ Ajouter un item</div>
       </div>
       <div class="card">
         <h3>📎 Divers & coordination <span class="badge" id="badgeDiv">—</span> <span class="badge-pct" id="pctDiv"></span></h3>
-        <table><thead><tr><th>#</th><th>Item</th><th>Qté</th><th>PU (MAD)</th><th>Total</th><th></th></tr></thead><tbody id="tblDiv"></tbody></table>
+        <table><thead><tr><th>#</th><th>Item</th><th>PU (MAD)</th><th>Jours</th><th>Perso</th><th>Total</th><th></th></tr></thead><tbody id="tblDiv"></tbody></table>
         <div class="subtotal" id="subDiv">—</div>
         <div class="add-row" onclick="window.addDiv()">+ Ajouter un item</div>
       </div>
@@ -353,35 +354,27 @@ let fb,db,docRef,unsub,firebaseReady=false;
 try{fb=initializeApp(firebaseConfig);db=getFirestore(fb);docRef=doc(db,'dashboard','main');firebaseReady=firebaseConfig.apiKey!=='REMPLACER';}catch(e){console.warn('Firebase init failed',e);}
 
 const SEED={
-  salePrice:165000,saleLocked:false,
+  salePrice:175000,saleLocked:false,
   hono:[
-    {id:'h1',name:'PM & Content Creator Lead',days:5,tj:2500},
-    {id:'h2',name:'Content Creators (×4)',days:12,tj:1500},
-    {id:'h3',name:'Senior Videographer',days:4,tj:3000},
-    {id:'h4',name:'Video Editor',days:6,tj:2200},
-    {id:'h5',name:'Motion Graphic Designer',days:1,tj:12000},
-    {id:'h6',name:'Content Specialist',days:1,tj:6000},
-    {id:'h7',name:'Account Executive',days:10,tj:3000}
+    {id:'h1',name:'Video Ayoub',pu:0,days:0,perso:1},
+    {id:'h2',name:'Monteur Othmane',pu:17000,days:1,perso:1},
+    {id:'h3',name:'CC 1',pu:3500,days:1,perso:1},
+    {id:'h4',name:'CC 2',pu:3500,days:1,perso:1},
+    {id:'h5',name:'CC 3',pu:3500,days:1,perso:1}
   ],
   logi:[
-    {id:'l1',name:'Train AR Casablanca-Marrakech',qty:14,pu:250},
-    {id:'l2',name:'Hôtel (nuitées)',qty:21,pu:700},
-    {id:'l3',name:'Per diems',qty:21,pu:350},
-    {id:'l4',name:'Transport local',qty:3,pu:800}
+    {id:'l1',name:'Hébergement',pu:1000,days:3,perso:6},
+    {id:'l2',name:'Transport on site',pu:800,days:3,perso:1},
+    {id:'l3',name:'Catering',pu:500,days:4,perso:6},
+    {id:'l4',name:'Train',pu:250,days:2,perso:6}
   ],
   equip:[
-    {id:'e1',name:'Location caméras',qty:3,pu:1500},
-    {id:'e2',name:'Micros + lumière',qty:1,pu:2500},
-    {id:'e3',name:'Gimbals',qty:4,pu:800},
-    {id:'e4',name:'CapCut Pro',qty:3,pu:400},
-    {id:'e5',name:'Adobe CC',qty:2,pu:600},
-    {id:'e6',name:'Artlist',qty:1,pu:1500},
-    {id:'e7',name:'Stockage cloud',qty:1,pu:800}
+    {id:'e1',name:'Abonnement CapCut',pu:200,days:1,perso:1},
+    {id:'e2',name:'Location système com',pu:3000,days:1,perso:1},
+    {id:'e3',name:'Connexion wifi on-site',pu:1000,days:1,perso:1},
+    {id:'e4',name:'Stabilisateur caméra (Ayoub)',pu:500,days:4,perso:1}
   ],
-  divers:[
-    {id:'d1',name:'Coordination pré-event',qty:1,pu:5000},
-    {id:'d2',name:'Coordination post-event',qty:1,pu:4000}
-  ],
+  divers:[],
   livrables:[
     {id:'v1',day:1,name:'Stories J1',qty:20,resp:'',status:'attente'},
     {id:'v2',day:1,name:'Reels J1',qty:3,resp:'',status:'attente'},
@@ -419,7 +412,7 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 
 function ensureData(){
   if(!D)D=JSON.parse(JSON.stringify(SEED));
-  if(!D.salePrice)D.salePrice=165000;
+  if(!D.salePrice)D.salePrice=175000;
   if(typeof D.saleLocked==='undefined')D.saleLocked=false;
   ['hono','logi','equip','divers','livrables','milestones'].forEach(k=>{
     if(!Array.isArray(D[k])){
@@ -495,13 +488,24 @@ window.importJSON=function(e){
   r.readAsText(f);e.target.value='';
 };
 
+// Reset data
+window.resetData=function(){
+  showConfirm('Réinitialiser toutes les données avec les valeurs par défaut ? Cette action est irréversible.',()=>{
+    D=JSON.parse(JSON.stringify(SEED));
+    renderAll();
+    save();
+    showToast('🔄 Données réinitialisées','success');
+  });
+};
+
 // Calculate
 function calcTotals(){
   ensureData();
-  const tHono=D.hono.reduce((s,r)=>s+(parseFloat(r.days)||0)*(parseFloat(r.tj)||0),0);
-  const tLogi=D.logi.reduce((s,r)=>s+(parseFloat(r.qty)||0)*(parseFloat(r.pu)||0),0);
-  const tEquip=D.equip.reduce((s,r)=>s+(parseFloat(r.qty)||0)*(parseFloat(r.pu)||0),0);
-  const tDiv=D.divers.reduce((s,r)=>s+(parseFloat(r.qty)||0)*(parseFloat(r.pu)||0),0);
+  const calc3=(arr)=>arr.reduce((s,r)=>s+(parseFloat(r.pu)||0)*(parseFloat(r.days)||0)*(parseFloat(r.perso)||0),0);
+  const tHono=calc3(D.hono);
+  const tLogi=calc3(D.logi);
+  const tEquip=calc3(D.equip);
+  const tDiv=calc3(D.divers);
   const cost=tHono+tLogi+tEquip+tDiv;
   const sale=parseFloat(D.salePrice)||0;
   const margin=sale-cost;
@@ -539,10 +543,10 @@ function renderAll(){
   lb.innerHTML=D.saleLocked?'🔒':'🔓';
   lb.title=D.saleLocked?'Déverrouiller le prix':'Verrouiller le prix';
 
-  renderTable('tblHono',D.hono,'hono','days','tj');
-  renderTable('tblLogi',D.logi,'logi','qty','pu');
-  renderTable('tblEquip',D.equip,'equip','qty','pu');
-  renderTable('tblDiv',D.divers,'divers','qty','pu');
+  renderTable('tblHono',D.hono,'hono');
+  renderTable('tblLogi',D.logi,'logi');
+  renderTable('tblEquip',D.equip,'equip');
+  renderTable('tblDiv',D.divers,'divers');
 
   document.getElementById('subHono').textContent=fmt(c.tHono)+' MAD';
   document.getElementById('subLogi').textContent=fmt(c.tLogi)+' MAD';
@@ -571,17 +575,17 @@ function renderAll(){
   renderTimeline();
 }
 
-function renderTable(tbodyId,arr,key,f1,f2){
+function renderTable(tbodyId,arr,key){
   const tbody=document.getElementById(tbodyId);
-  const isHono=key==='hono';
   let html='';
   arr.forEach((r,i)=>{
-    const total=(parseFloat(r[f1])||0)*(parseFloat(r[f2])||0);
+    const total=(parseFloat(r.pu)||0)*(parseFloat(r.days)||0)*(parseFloat(r.perso)||0);
     html+=`<tr>
       <td style="width:30px;color:var(--text2)">${i+1}</td>
       <td><input type="text" value="${esc(r.name)}" onchange="window.editCell('${key}','${r.id}','name',this.value)"></td>
-      <td><input type="number" step="${isHono?'0.5':'1'}" value="${r[f1]}" onchange="window.editCell('${key}','${r.id}','${f1}',this.value)"></td>
-      <td><input type="number" value="${r[f2]}" onchange="window.editCell('${key}','${r.id}','${f2}',this.value)"></td>
+      <td><input type="number" value="${r.pu}" onchange="window.editCell('${key}','${r.id}','pu',this.value)"></td>
+      <td><input type="number" step="0.5" value="${r.days}" onchange="window.editCell('${key}','${r.id}','days',this.value)"></td>
+      <td><input type="number" value="${r.perso}" onchange="window.editCell('${key}','${r.id}','perso',this.value)"></td>
       <td class="num">${fmt(total)}</td>
       <td><button class="del-btn" onclick="window.delRow('${key}','${r.id}','${esc(r.name)}')">✕</button></td>
     </tr>`;
@@ -594,7 +598,7 @@ window.editCell=function(key,id,field,val){
   const arr=key==='divers'?D.divers:D[key];
   const item=arr.find(r=>r.id===id);
   if(!item)return;
-  if(['days','tj','qty','pu'].includes(field))val=parseFloat(val)||0;
+  if(['days','tj','qty','pu','perso'].includes(field))val=parseFloat(val)||0;
   item[field]=val;renderAll();debounceSave();
 };
 
@@ -608,10 +612,10 @@ window.toggleLock=function(){
   showToast(D.saleLocked?'🔒 Prix verrouillé':'🔓 Prix déverrouillé','success');
 };
 
-window.addHono=function(){D.hono.push({id:uid(),name:'Nouveau profil',days:1,tj:1000});renderAll();debounceSave();};
-window.addLogi=function(){D.logi.push({id:uid(),name:'Nouvel item',qty:1,pu:0});renderAll();debounceSave();};
-window.addEquip=function(){D.equip.push({id:uid(),name:'Nouvel item',qty:1,pu:0});renderAll();debounceSave();};
-window.addDiv=function(){D.divers.push({id:uid(),name:'Nouvel item',qty:1,pu:0});renderAll();debounceSave();};
+window.addHono=function(){D.hono.push({id:uid(),name:'Nouveau profil',pu:0,days:1,perso:1});renderAll();debounceSave();};
+window.addLogi=function(){D.logi.push({id:uid(),name:'Nouvel item',pu:0,days:1,perso:1});renderAll();debounceSave();};
+window.addEquip=function(){D.equip.push({id:uid(),name:'Nouvel item',pu:0,days:1,perso:1});renderAll();debounceSave();};
+window.addDiv=function(){D.divers.push({id:uid(),name:'Nouvel item',pu:0,days:1,perso:1});renderAll();debounceSave();};
 
 window.delRow=function(key,id,name){
   showConfirm(`Supprimer "${name}" ?`,()=>{
