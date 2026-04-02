@@ -578,15 +578,17 @@ window.doExport=async function(){
   const gray=[107,114,128];
   const today=new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
 
+  // Strip emojis from any string
+  function clean(s){return String(s||'').replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{FE00}-\u{FEFF}]|[\u{1F900}-\u{1F9FF}]|[\u{200D}\u{20E3}\u{FE0F}]/gu,'').trim();}
+
   function checkPage(need){if(y+need>275){pdf.addPage();y=20;}}
   function sectionTitle(txt){
     checkPage(14);
-    pdf.setFontSize(12);pdf.setFont('helvetica','bold');pdf.setTextColor(...dark);
-    pdf.text(txt,margin,y);y+=8;
+    pdf.setFontSize(12);pdf.setFont('helvetica','bold');pdf.setTextColor(...accent);
+    pdf.text(clean(txt),margin,y);y+=8;
   }
 
-  // ─── HEADER ───
-  // Logo placeholder bar
+  // Header
   pdf.setFillColor(...accent);
   pdf.rect(0,0,W,3,'F');
 
@@ -594,7 +596,7 @@ window.doExport=async function(){
   pdf.text('GITEX Africa 2026',margin,y+6);
 
   pdf.setFontSize(9);pdf.setFont('helvetica','normal');pdf.setTextColor(...gray);
-  pdf.text('Déclic Agency — Gestion projet',margin,y+12);
+  pdf.text('Declic Agency',margin,y+12);
 
   pdf.setFontSize(9);pdf.setTextColor(...gray);
   pdf.text(today,W-margin,y+6,{align:'right'});
@@ -603,26 +605,26 @@ window.doExport=async function(){
   y+=20;
   pdf.setDrawColor(224,228,234);pdf.line(margin,y,W-margin,y);y+=8;
 
-  // ─── BUDGET ───
+  // Budget
   if(wantBudget){
-    sectionTitle('💰 Budget détaillé');
+    sectionTitle('BUDGET DETAILLE');
     pdf.setFontSize(9);pdf.setTextColor(...gray);
     pdf.text('Prix de vente client : '+fmt(c.sale)+' MAD HT',margin,y);y+=6;
 
     // Equipe
     checkPage(10);
     pdf.setFontSize(10);pdf.setFont('helvetica','bold');pdf.setTextColor(...dark);
-    pdf.text('Dépenses équipe',margin,y);y+=2;
+    pdf.text('Depenses equipe',margin,y);y+=2;
     const honoRows=D.hono.map(r=>{
       const t=(parseFloat(r.pu)||0)*(parseFloat(r.days)||0)*(parseFloat(r.perso)||0);
       const av=parseFloat(r.avance)||0;
-      return[r.name,fmt(r.pu),r.days,r.perso,fmt(t),fmt(av),fmt(t-av)];
+      return[clean(r.name),fmt(r.pu),r.days,r.perso,fmt(t),fmt(av),fmt(t-av)];
     });
     pdf.autoTable({startY:y,margin:{left:margin,right:margin},
       head:[['Poste','PU','Jours','Perso','Total','Avance','Reste']],
       body:honoRows,
       foot:[['Sous-total','','','',fmt(c.tHono),'','']],
-      styles:{fontSize:8,cellPadding:2.5},
+      styles:{fontSize:8,cellPadding:2.5,font:'helvetica'},
       headStyles:{fillColor:accent,textColor:[255,255,255],fontStyle:'bold'},
       footStyles:{fillColor:[240,242,245],textColor:dark,fontStyle:'bold'},
       theme:'grid'
@@ -636,13 +638,13 @@ window.doExport=async function(){
     const logiRows=D.logi.map(r=>{
       const t=(parseFloat(r.pu)||0)*(parseFloat(r.days)||0)*(parseFloat(r.perso)||0);
       const av=parseFloat(r.avance)||0;
-      return[r.name,fmt(r.pu),r.days,r.perso,fmt(t),fmt(av),fmt(t-av)];
+      return[clean(r.name),fmt(r.pu),r.days,r.perso,fmt(t),fmt(av),fmt(t-av)];
     });
     pdf.autoTable({startY:y,margin:{left:margin,right:margin},
       head:[['Item','PU','Jours','Perso','Total','Avance','Reste']],
       body:logiRows,
       foot:[['Sous-total','','','',fmt(c.tLogi),'','']],
-      styles:{fontSize:8,cellPadding:2.5},
+      styles:{fontSize:8,cellPadding:2.5,font:'helvetica'},
       headStyles:{fillColor:accent,textColor:[255,255,255],fontStyle:'bold'},
       footStyles:{fillColor:[240,242,245],textColor:dark,fontStyle:'bold'},
       theme:'grid'
@@ -652,17 +654,17 @@ window.doExport=async function(){
     // Equipement
     checkPage(10);
     pdf.setFontSize(10);pdf.setFont('helvetica','bold');pdf.setTextColor(...dark);
-    pdf.text('Matériel & extra',margin,y);y+=2;
+    pdf.text('Materiel & extra',margin,y);y+=2;
     const equipRows=D.equip.map(r=>{
       const t=(parseFloat(r.pu)||0)*(parseFloat(r.days)||0)*(parseFloat(r.perso)||0);
       const av=parseFloat(r.avance)||0;
-      return[r.name,fmt(r.pu),r.days,r.perso,fmt(t),fmt(av),fmt(t-av)];
+      return[clean(r.name),fmt(r.pu),r.days,r.perso,fmt(t),fmt(av),fmt(t-av)];
     });
     pdf.autoTable({startY:y,margin:{left:margin,right:margin},
       head:[['Item','PU','Jours','Perso','Total','Avance','Reste']],
       body:equipRows,
       foot:[['Sous-total','','','',fmt(c.tEquip),'','']],
-      styles:{fontSize:8,cellPadding:2.5},
+      styles:{fontSize:8,cellPadding:2.5,font:'helvetica'},
       headStyles:{fillColor:accent,textColor:[255,255,255],fontStyle:'bold'},
       footStyles:{fillColor:[240,242,245],textColor:dark,fontStyle:'bold'},
       theme:'grid'
@@ -677,13 +679,13 @@ window.doExport=async function(){
       const divRows=D.divers.map(r=>{
         const t=(parseFloat(r.pu)||0)*(parseFloat(r.days)||0)*(parseFloat(r.perso)||0);
         const av=parseFloat(r.avance)||0;
-        return[r.name,fmt(r.pu),r.days,r.perso,fmt(t),fmt(av),fmt(t-av)];
+        return[clean(r.name),fmt(r.pu),r.days,r.perso,fmt(t),fmt(av),fmt(t-av)];
       });
       pdf.autoTable({startY:y,margin:{left:margin,right:margin},
         head:[['Item','PU','Jours','Perso','Total','Avance','Reste']],
         body:divRows,
         foot:[['Sous-total','','','',fmt(c.tDiv),'','']],
-        styles:{fontSize:8,cellPadding:2.5},
+        styles:{fontSize:8,cellPadding:2.5,font:'helvetica'},
         headStyles:{fillColor:accent,textColor:[255,255,255],fontStyle:'bold'},
         footStyles:{fillColor:[240,242,245],textColor:dark,fontStyle:'bold'},
         theme:'grid'
@@ -696,10 +698,10 @@ window.doExport=async function(){
     pdf.autoTable({startY:y,margin:{left:margin,right:margin},
       body:[
         ['Prix de vente client',fmt(c.sale)+' MAD HT'],
-        ['Coût de revient total',fmt(c.cost)+' MAD'],
+        ['Cout de revient total',fmt(c.cost)+' MAD'],
         ['Marge brute',fmt(c.margin)+' MAD ('+c.pct.toFixed(1)+'%)']
       ],
-      styles:{fontSize:9,cellPadding:3},
+      styles:{fontSize:9,cellPadding:3,font:'helvetica'},
       columnStyles:{0:{fontStyle:'bold'},1:{halign:'right',fontStyle:'bold'}},
       didParseCell:function(data){
         if(data.row.index===2){
@@ -711,24 +713,24 @@ window.doExport=async function(){
     y=pdf.lastAutoTable.finalY+8;
   }
 
-  // ─── PREVISIONNEL ───
+  // Previsionnel
   if(wantPrev){
-    sectionTitle('📊 Prévisionnel trésorerie');
+    sectionTitle('PREVISIONNEL TRESORERIE');
     const avH=D.hono.reduce((s,r)=>s+(parseFloat(r.avance)||0),0);
     const avL=D.logi.reduce((s,r)=>s+(parseFloat(r.avance)||0),0);
     const avE=D.equip.reduce((s,r)=>s+(parseFloat(r.avance)||0),0);
     const avD=D.divers.reduce((s,r)=>s+(parseFloat(r.avance)||0),0);
     const totAv=avH+avL+avE+avD;
     pdf.autoTable({startY:y,margin:{left:margin,right:margin},
-      head:[['Catégorie','Budget','Avances','Reste à décaisser']],
+      head:[['Categorie','Budget','Avances','Reste a decaisser']],
       body:[
-        ['Équipe',fmt(c.tHono),fmt(avH),fmt(c.tHono-avH)],
+        ['Equipe',fmt(c.tHono),fmt(avH),fmt(c.tHono-avH)],
         ['Logistique',fmt(c.tLogi),fmt(avL),fmt(c.tLogi-avL)],
-        ['Matériel',fmt(c.tEquip),fmt(avE),fmt(c.tEquip-avE)],
+        ['Materiel',fmt(c.tEquip),fmt(avE),fmt(c.tEquip-avE)],
         ['Divers',fmt(c.tDiv),fmt(avD),fmt(c.tDiv-avD)]
       ],
       foot:[['TOTAL',fmt(c.cost),fmt(totAv),fmt(c.cost-totAv)]],
-      styles:{fontSize:8,cellPadding:2.5},
+      styles:{fontSize:8,cellPadding:2.5,font:'helvetica'},
       headStyles:{fillColor:[51,154,240],textColor:[255,255,255],fontStyle:'bold'},
       footStyles:{fillColor:[240,242,245],textColor:dark,fontStyle:'bold'},
       columnStyles:{1:{halign:'right'},2:{halign:'right'},3:{halign:'right'}},
@@ -737,10 +739,10 @@ window.doExport=async function(){
     y=pdf.lastAutoTable.finalY+8;
   }
 
-  // ─── LIVRABLES ───
+  // Livrables
   if(wantLiv){
-    sectionTitle('📋 Suivi des livrables');
-    const days=[{num:1,label:'Jour 1 — 7 avril'},{num:2,label:'Jour 2 — 8 avril'},{num:3,label:'Jour 3 — 9 avril'}];
+    sectionTitle('SUIVI DES LIVRABLES');
+    const days=[{num:1,label:'Jour 1 - 7 avril'},{num:2,label:'Jour 2 - 8 avril'},{num:3,label:'Jour 3 - 9 avril'}];
     days.forEach(d=>{
       const items=D.livrables.filter(l=>l.day===d.num);
       if(items.length===0)return;
@@ -750,21 +752,21 @@ window.doExport=async function(){
       const doneCount=items.filter(l=>l.status==='termine').length;
       const totalQty=items.reduce((s,l)=>s+(parseInt(l.qty)||0),0);
       const rows=items.map(l=>{
-        const st=l.status==='termine'?'✓ Terminé':l.status==='encours'?'⏳ En cours':'○ En attente';
-        return[l.name,l.qty,l.resp||'—',st];
+        const st=l.status==='termine'?'[OK] Termine':l.status==='encours'?'[...] En cours':'[ ] En attente';
+        return[clean(l.name),l.qty,l.resp||'-',st];
       });
       pdf.autoTable({startY:y,margin:{left:margin,right:margin},
-        head:[['Livrable','Qté','Responsable','Statut']],
+        head:[['Livrable','Qte','Responsable','Statut']],
         body:rows,
-        foot:[[doneCount+'/'+items.length+' complétés',totalQty+' contenus','','']],
-        styles:{fontSize:8,cellPadding:2.5},
+        foot:[[doneCount+'/'+items.length+' completes',totalQty+' contenus','','']],
+        styles:{fontSize:8,cellPadding:2.5,font:'helvetica'},
         headStyles:{fillColor:accent,textColor:[255,255,255],fontStyle:'bold'},
         footStyles:{fillColor:[240,242,245],textColor:dark,fontStyle:'bold'},
         didParseCell:function(data){
           if(data.section==='body'&&data.column.index===3){
             const v=data.cell.raw;
-            if(v.startsWith('✓'))data.cell.styles.textColor=[81,207,102];
-            else if(v.startsWith('⏳'))data.cell.styles.textColor=[255,169,77];
+            if(v.startsWith('[OK]'))data.cell.styles.textColor=[81,207,102];
+            else if(v.startsWith('[...]'))data.cell.styles.textColor=[255,169,77];
             else data.cell.styles.textColor=gray;
           }
         },
@@ -774,25 +776,25 @@ window.doExport=async function(){
     });
   }
 
-  // ─── TIMELINE ───
+  // Timeline
   if(wantTimeline){
-    sectionTitle('📅 Timeline projet');
+    sectionTitle('TIMELINE PROJET');
     const sorted=[...D.milestones].sort((a,b)=>{
       if(!a.date)return 1;if(!b.date)return -1;
       return a.date.localeCompare(b.date);
     });
     const rows=sorted.map(m=>{
-      const d=m.date?new Date(m.date+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}):'—';
-      return[d,m.text,m.done?'✓ Fait':'○ À faire'];
+      const d=m.date?new Date(m.date+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}):'--';
+      return[d,clean(m.text),m.done?'[OK] Fait':'[ ] A faire'];
     });
     pdf.autoTable({startY:y,margin:{left:margin,right:margin},
       head:[['Date','Jalon','Statut']],
       body:rows,
-      styles:{fontSize:8,cellPadding:2.5},
+      styles:{fontSize:8,cellPadding:2.5,font:'helvetica'},
       headStyles:{fillColor:accent,textColor:[255,255,255],fontStyle:'bold'},
       didParseCell:function(data){
         if(data.section==='body'&&data.column.index===2){
-          if(data.cell.raw.startsWith('✓'))data.cell.styles.textColor=[81,207,102];
+          if(data.cell.raw.startsWith('[OK]'))data.cell.styles.textColor=[81,207,102];
           else data.cell.styles.textColor=gray;
         }
       },
@@ -801,17 +803,17 @@ window.doExport=async function(){
     y=pdf.lastAutoTable.finalY+8;
   }
 
-  // ─── FOOTER on all pages ───
+  // Footer on all pages
   const pageCount=pdf.internal.getNumberOfPages();
   for(let p=1;p<=pageCount;p++){
     pdf.setPage(p);
     pdf.setFontSize(7);pdf.setTextColor(180,180,180);
-    pdf.text('GITEX Africa 2026 — Déclic Agency — Confidentiel',margin,290);
+    pdf.text('GITEX Africa 2026 - Declic Agency - Confidentiel',margin,290);
     pdf.text('Page '+p+'/'+pageCount,W-margin,290,{align:'right'});
   }
 
   pdf.save('GITEX_2026_'+new Date().toISOString().slice(0,10)+'.pdf');
-  showToast('📥 PDF exporté','success');
+  showToast('PDF exporte avec succes','success');
   window.closeExportModal();
 };
 window.importJSON=function(e){
