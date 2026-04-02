@@ -181,8 +181,6 @@ td input[type="number"] { width:90px; text-align:right; font-family:'JetBrains M
   .content { padding:14px; }
 }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
 
@@ -529,7 +527,7 @@ window.execConfirm=function(){if(confirmCb)confirmCb();window.closeConfirm();};
 window.showExportModal=function(){document.getElementById('exportModal').classList.add('show');};
 window.closeExportModal=function(){document.getElementById('exportModal').classList.remove('show');};
 
-window.doExport=function(){
+window.doExport=async function(){
   const wantBudget=document.getElementById('expBudget').checked;
   const wantPrev=document.getElementById('expPrev').checked;
   const wantLiv=document.getElementById('expLiv').checked;
@@ -547,6 +545,25 @@ window.doExport=function(){
     if(!wantJSON)showToast('⚠ Aucune section sélectionnée','error');
     window.closeExportModal();
     return;
+  }
+
+  // Dynamic load jsPDF
+  if(!window.jspdf){
+    showToast('⏳ Chargement du moteur PDF...','success');
+    await new Promise((res,rej)=>{
+      const s1=document.createElement('script');
+      s1.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js';
+      s1.onload=()=>{
+        const s2=document.createElement('script');
+        s2.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js';
+        s2.onload=()=>res();
+        s2.onerror=()=>rej();
+        document.head.appendChild(s2);
+      };
+      s1.onerror=()=>rej();
+      document.head.appendChild(s1);
+    }).catch(()=>{showToast('⚠ Impossible de charger le moteur PDF','error');return;});
+    if(!window.jspdf){showToast('⚠ Moteur PDF indisponible','error');return;}
   }
 
   ensureData();
