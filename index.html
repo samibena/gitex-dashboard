@@ -180,6 +180,8 @@ td input[type="number"] { width:90px; text-align:right; font-family:'JetBrains M
   header { padding:10px 14px; }
   .content { padding:14px; }
 }
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
 </style>
 </head>
 <body>
@@ -215,8 +217,8 @@ td input[type="number"] { width:90px; text-align:right; font-family:'JetBrains M
     <div class="header-right">
       <span class="sync-dot off" id="syncDot" title="Firebase sync"></span>
       <button class="icon-btn" onclick="window.toggleTheme()" title="Dark/Light mode">🌓</button>
-      <button class="icon-btn" onclick="window.exportJSON()" title="Export JSON">📥</button>
-      <button class="icon-btn" onclick="document.getElementById('importFile').click()" title="Import JSON">📤</button>
+      <button class="icon-btn" onclick="window.showExportModal()" title="Exporter">📥</button>
+      <button class="icon-btn" onclick="document.getElementById('importFile').click()" title="Importer JSON">📤</button>
       <button class="icon-btn" onclick="window.resetData()" title="Réinitialiser les données" style="font-size:.75rem">🔄</button>
       <input type="file" id="importFile" accept=".json" style="display:none" onchange="window.importJSON(event)">
     </div>
@@ -313,6 +315,37 @@ td input[type="number"] { width:90px; text-align:right; font-family:'JetBrains M
 </div>
 
 <div id="toast"></div>
+
+<!-- Export Modal -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal-box" style="width:440px;">
+    <h3 style="margin-bottom:6px;">📥 Exporter</h3>
+    <p style="color:var(--text2);font-size:.82rem;margin-bottom:16px;">Sélectionnez les sections à inclure dans l'export :</p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px;">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.88rem;">
+        <input type="checkbox" id="expBudget" checked style="width:18px;height:18px;accent-color:var(--accent);"> 💰 Budget détaillé
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.88rem;">
+        <input type="checkbox" id="expPrev" checked style="width:18px;height:18px;accent-color:var(--accent);"> 📊 Prévisionnel trésorerie
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.88rem;">
+        <input type="checkbox" id="expLiv" checked style="width:18px;height:18px;accent-color:var(--accent);"> 📋 Livrables
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.88rem;">
+        <input type="checkbox" id="expTimeline" checked style="width:18px;height:18px;accent-color:var(--accent);"> 📅 Timeline
+      </label>
+      <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px;">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.82rem;color:var(--text2);">
+          <input type="checkbox" id="expJSON" style="width:18px;height:18px;accent-color:var(--accent);"> 💾 Backup JSON (données brutes)
+        </label>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="icon-btn" onclick="window.closeExportModal()">Annuler</button>
+      <button class="icon-btn" style="background:var(--accent);color:#0b0e14;border-color:var(--accent);font-weight:700;" onclick="window.doExport()">Exporter PDF</button>
+    </div>
+  </div>
+</div>
 
 <div class="modal-overlay" id="confirmModal">
   <div class="modal-box">
@@ -492,12 +525,277 @@ function showConfirm(msg,cb){document.getElementById('confirmMsg').textContent=m
 window.closeConfirm=function(){document.getElementById('confirmModal').classList.remove('show');confirmCb=null;};
 window.execConfirm=function(){if(confirmCb)confirmCb();window.closeConfirm();};
 
-// Export/Import
-window.exportJSON=function(){
-  const blob=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download='gitex2026_backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();
-  showToast('📥 Backup exporté','success');
+// Export modal
+window.showExportModal=function(){document.getElementById('exportModal').classList.add('show');};
+window.closeExportModal=function(){document.getElementById('exportModal').classList.remove('show');};
+
+window.doExport=function(){
+  const wantBudget=document.getElementById('expBudget').checked;
+  const wantPrev=document.getElementById('expPrev').checked;
+  const wantLiv=document.getElementById('expLiv').checked;
+  const wantTimeline=document.getElementById('expTimeline').checked;
+  const wantJSON=document.getElementById('expJSON').checked;
+
+  if(wantJSON){
+    const blob=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download='gitex2026_backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();
+    showToast('💾 Backup JSON exporté','success');
+  }
+
+  if(!wantBudget&&!wantPrev&&!wantLiv&&!wantTimeline){
+    if(!wantJSON)showToast('⚠ Aucune section sélectionnée','error');
+    window.closeExportModal();
+    return;
+  }
+
+  ensureData();
+  const c=calcTotals();
+  const{jsPDF}=window.jspdf;
+  const pdf=new jsPDF('p','mm','a4');
+  const W=pdf.internal.pageSize.getWidth();
+  const margin=16;
+  let y=16;
+  const accent=[0,168,138];
+  const dark=[26,26,46];
+  const gray=[107,114,128];
+  const today=new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+
+  function checkPage(need){if(y+need>275){pdf.addPage();y=20;}}
+  function sectionTitle(txt){
+    checkPage(14);
+    pdf.setFontSize(12);pdf.setFont('helvetica','bold');pdf.setTextColor(...dark);
+    pdf.text(txt,margin,y);y+=8;
+  }
+
+  // ─── HEADER ───
+  // Logo placeholder bar
+  pdf.setFillColor(...accent);
+  pdf.rect(0,0,W,3,'F');
+
+  pdf.setFontSize(18);pdf.setFont('helvetica','bold');pdf.setTextColor(...dark);
+  pdf.text('GITEX Africa 2026',margin,y+6);
+
+  pdf.setFontSize(9);pdf.setFont('helvetica','normal');pdf.setTextColor(...gray);
+  pdf.text('Déclic Agency — Gestion projet',margin,y+12);
+
+  pdf.setFontSize(9);pdf.setTextColor(...gray);
+  pdf.text(today,W-margin,y+6,{align:'right'});
+  pdf.text('Document confidentiel',W-margin,y+12,{align:'right'});
+
+  y+=20;
+  pdf.setDrawColor(224,228,234);pdf.line(margin,y,W-margin,y);y+=8;
+
+  // ─── BUDGET ───
+  if(wantBudget){
+    sectionTitle('💰 Budget détaillé');
+    pdf.setFontSize(9);pdf.setTextColor(...gray);
+    pdf.text('Prix de vente client : '+fmt(c.sale)+' MAD HT',margin,y);y+=6;
+
+    // Equipe
+    checkPage(10);
+    pdf.setFontSize(10);pdf.setFont('helvetica','bold');pdf.setTextColor(...dark);
+    pdf.text('Dépenses équipe',margin,y);y+=2;
+    const honoRows=D.hono.map(r=>{
+      const t=(parseFloat(r.pu)||0)*(parseFloat(r.days)||0)*(parseFloat(r.perso)||0);
+      const av=parseFloat(r.avance)||0;
+      return[r.name,fmt(r.pu),r.days,r.perso,fmt(t),fmt(av),fmt(t-av)];
+    });
+    pdf.autoTable({startY:y,margin:{left:margin,right:margin},
+      head:[['Poste','PU','Jours','Perso','Total','Avance','Reste']],
+      body:honoRows,
+      foot:[['Sous-total','','','',fmt(c.tHono),'','']],
+      styles:{fontSize:8,cellPadding:2.5},
+      headStyles:{fillColor:accent,textColor:[255,255,255],fontStyle:'bold'},
+      footStyles:{fillColor:[240,242,245],textColor:dark,fontStyle:'bold'},
+      theme:'grid'
+    });
+    y=pdf.lastAutoTable.finalY+8;
+
+    // Logistique
+    checkPage(10);
+    pdf.setFontSize(10);pdf.setFont('helvetica','bold');pdf.setTextColor(...dark);
+    pdf.text('Logistique & transport',margin,y);y+=2;
+    const logiRows=D.logi.map(r=>{
+      const t=(parseFloat(r.pu)||0)*(parseFloat(r.days)||0)*(parseFloat(r.perso)||0);
+      const av=parseFloat(r.avance)||0;
+      return[r.name,fmt(r.pu),r.days,r.perso,fmt(t),fmt(av),fmt(t-av)];
+    });
+    pdf.autoTable({startY:y,margin:{left:margin,right:margin},
+      head:[['Item','PU','Jours','Perso','Total','Avance','Reste']],
+      body:logiRows,
+      foot:[['Sous-total','','','',fmt(c.tLogi),'','']],
+      styles:{fontSize:8,cellPadding:2.5},
+      headStyles:{fillColor:accent,textColor:[255,255,255],fontStyle:'bold'},
+      footStyles:{fillColor:[240,242,245],textColor:dark,fontStyle:'bold'},
+      theme:'grid'
+    });
+    y=pdf.lastAutoTable.finalY+8;
+
+    // Equipement
+    checkPage(10);
+    pdf.setFontSize(10);pdf.setFont('helvetica','bold');pdf.setTextColor(...dark);
+    pdf.text('Matériel & extra',margin,y);y+=2;
+    const equipRows=D.equip.map(r=>{
+      const t=(parseFloat(r.pu)||0)*(parseFloat(r.days)||0)*(parseFloat(r.perso)||0);
+      const av=parseFloat(r.avance)||0;
+      return[r.name,fmt(r.pu),r.days,r.perso,fmt(t),fmt(av),fmt(t-av)];
+    });
+    pdf.autoTable({startY:y,margin:{left:margin,right:margin},
+      head:[['Item','PU','Jours','Perso','Total','Avance','Reste']],
+      body:equipRows,
+      foot:[['Sous-total','','','',fmt(c.tEquip),'','']],
+      styles:{fontSize:8,cellPadding:2.5},
+      headStyles:{fillColor:accent,textColor:[255,255,255],fontStyle:'bold'},
+      footStyles:{fillColor:[240,242,245],textColor:dark,fontStyle:'bold'},
+      theme:'grid'
+    });
+    y=pdf.lastAutoTable.finalY+8;
+
+    // Divers
+    if(D.divers.length>0){
+      checkPage(10);
+      pdf.setFontSize(10);pdf.setFont('helvetica','bold');pdf.setTextColor(...dark);
+      pdf.text('Divers & coordination',margin,y);y+=2;
+      const divRows=D.divers.map(r=>{
+        const t=(parseFloat(r.pu)||0)*(parseFloat(r.days)||0)*(parseFloat(r.perso)||0);
+        const av=parseFloat(r.avance)||0;
+        return[r.name,fmt(r.pu),r.days,r.perso,fmt(t),fmt(av),fmt(t-av)];
+      });
+      pdf.autoTable({startY:y,margin:{left:margin,right:margin},
+        head:[['Item','PU','Jours','Perso','Total','Avance','Reste']],
+        body:divRows,
+        foot:[['Sous-total','','','',fmt(c.tDiv),'','']],
+        styles:{fontSize:8,cellPadding:2.5},
+        headStyles:{fillColor:accent,textColor:[255,255,255],fontStyle:'bold'},
+        footStyles:{fillColor:[240,242,245],textColor:dark,fontStyle:'bold'},
+        theme:'grid'
+      });
+      y=pdf.lastAutoTable.finalY+8;
+    }
+
+    // Recap marge
+    checkPage(30);
+    pdf.autoTable({startY:y,margin:{left:margin,right:margin},
+      body:[
+        ['Prix de vente client',fmt(c.sale)+' MAD HT'],
+        ['Coût de revient total',fmt(c.cost)+' MAD'],
+        ['Marge brute',fmt(c.margin)+' MAD ('+c.pct.toFixed(1)+'%)']
+      ],
+      styles:{fontSize:9,cellPadding:3},
+      columnStyles:{0:{fontStyle:'bold'},1:{halign:'right',fontStyle:'bold'}},
+      didParseCell:function(data){
+        if(data.row.index===2){
+          data.cell.styles.textColor=c.pct>=15?[81,207,102]:c.pct>=10?[255,169,77]:[255,107,107];
+        }
+      },
+      theme:'plain'
+    });
+    y=pdf.lastAutoTable.finalY+8;
+  }
+
+  // ─── PREVISIONNEL ───
+  if(wantPrev){
+    sectionTitle('📊 Prévisionnel trésorerie');
+    const avH=D.hono.reduce((s,r)=>s+(parseFloat(r.avance)||0),0);
+    const avL=D.logi.reduce((s,r)=>s+(parseFloat(r.avance)||0),0);
+    const avE=D.equip.reduce((s,r)=>s+(parseFloat(r.avance)||0),0);
+    const avD=D.divers.reduce((s,r)=>s+(parseFloat(r.avance)||0),0);
+    const totAv=avH+avL+avE+avD;
+    pdf.autoTable({startY:y,margin:{left:margin,right:margin},
+      head:[['Catégorie','Budget','Avances','Reste à décaisser']],
+      body:[
+        ['Équipe',fmt(c.tHono),fmt(avH),fmt(c.tHono-avH)],
+        ['Logistique',fmt(c.tLogi),fmt(avL),fmt(c.tLogi-avL)],
+        ['Matériel',fmt(c.tEquip),fmt(avE),fmt(c.tEquip-avE)],
+        ['Divers',fmt(c.tDiv),fmt(avD),fmt(c.tDiv-avD)]
+      ],
+      foot:[['TOTAL',fmt(c.cost),fmt(totAv),fmt(c.cost-totAv)]],
+      styles:{fontSize:8,cellPadding:2.5},
+      headStyles:{fillColor:[51,154,240],textColor:[255,255,255],fontStyle:'bold'},
+      footStyles:{fillColor:[240,242,245],textColor:dark,fontStyle:'bold'},
+      columnStyles:{1:{halign:'right'},2:{halign:'right'},3:{halign:'right'}},
+      theme:'grid'
+    });
+    y=pdf.lastAutoTable.finalY+8;
+  }
+
+  // ─── LIVRABLES ───
+  if(wantLiv){
+    sectionTitle('📋 Suivi des livrables');
+    const days=[{num:1,label:'Jour 1 — 7 avril'},{num:2,label:'Jour 2 — 8 avril'},{num:3,label:'Jour 3 — 9 avril'}];
+    days.forEach(d=>{
+      const items=D.livrables.filter(l=>l.day===d.num);
+      if(items.length===0)return;
+      checkPage(10);
+      pdf.setFontSize(9);pdf.setFont('helvetica','bold');pdf.setTextColor(...accent);
+      pdf.text(d.label,margin,y);y+=2;
+      const doneCount=items.filter(l=>l.status==='termine').length;
+      const totalQty=items.reduce((s,l)=>s+(parseInt(l.qty)||0),0);
+      const rows=items.map(l=>{
+        const st=l.status==='termine'?'✓ Terminé':l.status==='encours'?'⏳ En cours':'○ En attente';
+        return[l.name,l.qty,l.resp||'—',st];
+      });
+      pdf.autoTable({startY:y,margin:{left:margin,right:margin},
+        head:[['Livrable','Qté','Responsable','Statut']],
+        body:rows,
+        foot:[[doneCount+'/'+items.length+' complétés',totalQty+' contenus','','']],
+        styles:{fontSize:8,cellPadding:2.5},
+        headStyles:{fillColor:accent,textColor:[255,255,255],fontStyle:'bold'},
+        footStyles:{fillColor:[240,242,245],textColor:dark,fontStyle:'bold'},
+        didParseCell:function(data){
+          if(data.section==='body'&&data.column.index===3){
+            const v=data.cell.raw;
+            if(v.startsWith('✓'))data.cell.styles.textColor=[81,207,102];
+            else if(v.startsWith('⏳'))data.cell.styles.textColor=[255,169,77];
+            else data.cell.styles.textColor=gray;
+          }
+        },
+        theme:'grid'
+      });
+      y=pdf.lastAutoTable.finalY+6;
+    });
+  }
+
+  // ─── TIMELINE ───
+  if(wantTimeline){
+    sectionTitle('📅 Timeline projet');
+    const sorted=[...D.milestones].sort((a,b)=>{
+      if(!a.date)return 1;if(!b.date)return -1;
+      return a.date.localeCompare(b.date);
+    });
+    const rows=sorted.map(m=>{
+      const d=m.date?new Date(m.date+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}):'—';
+      return[d,m.text,m.done?'✓ Fait':'○ À faire'];
+    });
+    pdf.autoTable({startY:y,margin:{left:margin,right:margin},
+      head:[['Date','Jalon','Statut']],
+      body:rows,
+      styles:{fontSize:8,cellPadding:2.5},
+      headStyles:{fillColor:accent,textColor:[255,255,255],fontStyle:'bold'},
+      didParseCell:function(data){
+        if(data.section==='body'&&data.column.index===2){
+          if(data.cell.raw.startsWith('✓'))data.cell.styles.textColor=[81,207,102];
+          else data.cell.styles.textColor=gray;
+        }
+      },
+      theme:'grid'
+    });
+    y=pdf.lastAutoTable.finalY+8;
+  }
+
+  // ─── FOOTER on all pages ───
+  const pageCount=pdf.internal.getNumberOfPages();
+  for(let p=1;p<=pageCount;p++){
+    pdf.setPage(p);
+    pdf.setFontSize(7);pdf.setTextColor(180,180,180);
+    pdf.text('GITEX Africa 2026 — Déclic Agency — Confidentiel',margin,290);
+    pdf.text('Page '+p+'/'+pageCount,W-margin,290,{align:'right'});
+  }
+
+  pdf.save('GITEX_2026_'+new Date().toISOString().slice(0,10)+'.pdf');
+  showToast('📥 PDF exporté','success');
+  window.closeExportModal();
 };
 window.importJSON=function(e){
   const f=e.target.files[0];if(!f)return;
