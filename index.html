@@ -552,10 +552,10 @@ window.doExport=async function(){
     showToast('⏳ Chargement du moteur PDF...','success');
     await new Promise((res,rej)=>{
       const s1=document.createElement('script');
-      s1.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js';
+      s1.src='https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js';
       s1.onload=()=>{
         const s2=document.createElement('script');
-        s2.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js';
+        s2.src='https://unpkg.com/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js';
         s2.onload=()=>res();
         s2.onerror=()=>rej();
         document.head.appendChild(s2);
