@@ -268,17 +268,26 @@ td input[type="number"] { width:90px; text-align:right; font-family:'JetBrains M
       </div>
       <div class="card">
         <h3>🎥 Matériel & extra <span class="badge" id="badgeEquip">—</span> <span class="badge-pct" id="pctEquip"></span></h3>
-        <table><thead><tr><th>#</th><th>Item</th><th>PU (MAD)</th><th>Jours</th><th>Perso</th><th>Total</th><th></th></tr></thead><tbody id="tblEquip"></tbody></table>
+        <table><thead><tr><th>#</th><th>Item</th><th>PU (MAD)</th><th>Jours</th><th>Perso</th><th>Total</th><th>Avance</th><th>Reste</th><th></th></tr></thead><tbody id="tblEquip"></tbody></table>
         <div class="subtotal" id="subEquip">—</div>
+        <div style="display:flex;justify-content:flex-end;gap:20px;padding:6px 10px 0;font-size:.78rem;color:var(--text2);">
+          <span>Total avances : <strong id="totalAvancesEquip" style="color:var(--accent)">—</strong></span>
+          <span>Reste global : <strong id="resteGlobalEquip">—</strong></span>
+        </div>
         <div class="add-row" onclick="window.addEquip()">+ Ajouter un item</div>
       </div>
       <div class="card">
         <h3>📎 Divers & coordination <span class="badge" id="badgeDiv">—</span> <span class="badge-pct" id="pctDiv"></span></h3>
-        <table><thead><tr><th>#</th><th>Item</th><th>PU (MAD)</th><th>Jours</th><th>Perso</th><th>Total</th><th></th></tr></thead><tbody id="tblDiv"></tbody></table>
+        <table><thead><tr><th>#</th><th>Item</th><th>PU (MAD)</th><th>Jours</th><th>Perso</th><th>Total</th><th>Avance</th><th>Reste</th><th></th></tr></thead><tbody id="tblDiv"></tbody></table>
         <div class="subtotal" id="subDiv">—</div>
+        <div style="display:flex;justify-content:flex-end;gap:20px;padding:6px 10px 0;font-size:.78rem;color:var(--text2);">
+          <span>Total avances : <strong id="totalAvancesDiv" style="color:var(--accent)">—</strong></span>
+          <span>Reste global : <strong id="resteGlobalDiv">—</strong></span>
+        </div>
         <div class="add-row" onclick="window.addDiv()">+ Ajouter un item</div>
       </div>
       <div class="recap" id="recapBox"></div>
+      <div class="card" id="previsionnel" style="margin-top:16px;border:1px solid var(--blue);"></div>
     </div>
 
     <!-- TAB: Livrables -->
@@ -587,6 +596,22 @@ function renderAll(){
   rgLogiEl.textContent=fmt(resteGlobalLogi)+' MAD';
   rgLogiEl.style.color=resteGlobalLogi<=0?'var(--green)':resteGlobalLogi<c.tLogi*0.3?'var(--orange)':'var(--text)';
 
+  // Avances equip
+  const totalAvancesEquip=D.equip.reduce((s,r)=>s+(parseFloat(r.avance)||0),0);
+  const resteGlobalEquip=c.tEquip-totalAvancesEquip;
+  document.getElementById('totalAvancesEquip').textContent=fmt(totalAvancesEquip)+' MAD';
+  const rgEquipEl=document.getElementById('resteGlobalEquip');
+  rgEquipEl.textContent=fmt(resteGlobalEquip)+' MAD';
+  rgEquipEl.style.color=resteGlobalEquip<=0?'var(--green)':resteGlobalEquip<c.tEquip*0.3?'var(--orange)':'var(--text)';
+
+  // Avances divers
+  const totalAvancesDiv=D.divers.reduce((s,r)=>s+(parseFloat(r.avance)||0),0);
+  const resteGlobalDiv=c.tDiv-totalAvancesDiv;
+  document.getElementById('totalAvancesDiv').textContent=fmt(totalAvancesDiv)+' MAD';
+  const rgDivEl=document.getElementById('resteGlobalDiv');
+  rgDivEl.textContent=fmt(resteGlobalDiv)+' MAD';
+  rgDivEl.style.color=resteGlobalDiv<=0?'var(--green)':resteGlobalDiv<c.tDiv*0.3?'var(--orange)':'var(--text)';
+
   document.getElementById('recapBox').innerHTML=`
     <div class="recap-row"><span>Prix de vente client</span><span class="num">${fmt(c.sale)} MAD HT</span></div>
     <div class="recap-row"><span>Honoraires équipe</span><span class="num">${fmt(c.tHono)} MAD</span></div>
@@ -596,13 +621,66 @@ function renderAll(){
     <div class="recap-row"><span><strong>Coût de revient total</strong></span><span class="num"><strong>${fmt(c.cost)} MAD</strong></span></div>
     <div class="recap-row total"><span>Marge brute</span><span class="num ${mColor}"><strong>${fmt(c.margin)} MAD (${c.pct.toFixed(1)}%)</strong></span></div>
   `;
+
+  // Prévisionnel trésorerie
+  const avHono=D.hono.reduce((s,r)=>s+(parseFloat(r.avance)||0),0);
+  const avLogi=D.logi.reduce((s,r)=>s+(parseFloat(r.avance)||0),0);
+  const avEquip=D.equip.reduce((s,r)=>s+(parseFloat(r.avance)||0),0);
+  const avDiv=D.divers.reduce((s,r)=>s+(parseFloat(r.avance)||0),0);
+  const totalAv=avHono+avLogi+avEquip+avDiv;
+  const totalReste=c.cost-totalAv;
+  const pctDecaisse=c.cost>0?(totalAv/c.cost*100):0;
+
+  document.getElementById('previsionnel').innerHTML=`
+    <h3 style="font-size:.95rem;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;">📊 Prévisionnel trésorerie projet</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;">
+        <div style="font-size:.7rem;color:var(--text2);text-transform:uppercase;font-weight:600;margin-bottom:4px;">Budget total</div>
+        <div style="font-size:1.3rem;font-weight:800;font-family:'JetBrains Mono',monospace;">${fmt(c.cost)}</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;">
+        <div style="font-size:.7rem;color:var(--text2);text-transform:uppercase;font-weight:600;margin-bottom:4px;">Déjà décaissé</div>
+        <div style="font-size:1.3rem;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--accent);">${fmt(totalAv)}</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;">
+        <div style="font-size:.7rem;color:var(--text2);text-transform:uppercase;font-weight:600;margin-bottom:4px;">Reste à décaisser</div>
+        <div style="font-size:1.3rem;font-weight:800;font-family:'JetBrains Mono',monospace;color:${totalReste<=0?'var(--green)':'var(--orange)'};">${fmt(totalReste)}</div>
+      </div>
+    </div>
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;font-size:.78rem;color:var(--text2);margin-bottom:4px;">
+        <span>Progression décaissement</span><span>${pctDecaisse.toFixed(0)}%</span>
+      </div>
+      <div style="height:8px;background:var(--surface);border-radius:4px;overflow:hidden;">
+        <div style="height:100%;width:${pctDecaisse}%;background:var(--accent);border-radius:4px;transition:width .3s;"></div>
+      </div>
+    </div>
+    <div style="font-size:.84rem;">
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);">
+        <span>👥 Équipe</span>
+        <span><span style="color:var(--accent);font-family:'JetBrains Mono',monospace;font-weight:600;">${fmt(avHono)}</span> versés · <span style="font-family:'JetBrains Mono',monospace;font-weight:600;">${fmt(c.tHono-avHono)}</span> restant</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);">
+        <span>🚂 Logistique</span>
+        <span><span style="color:var(--accent);font-family:'JetBrains Mono',monospace;font-weight:600;">${fmt(avLogi)}</span> versés · <span style="font-family:'JetBrains Mono',monospace;font-weight:600;">${fmt(c.tLogi-avLogi)}</span> restant</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);">
+        <span>🎥 Matériel</span>
+        <span><span style="color:var(--accent);font-family:'JetBrains Mono',monospace;font-weight:600;">${fmt(avEquip)}</span> versés · <span style="font-family:'JetBrains Mono',monospace;font-weight:600;">${fmt(c.tEquip-avEquip)}</span> restant</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;">
+        <span>📎 Divers</span>
+        <span><span style="color:var(--accent);font-family:'JetBrains Mono',monospace;font-weight:600;">${fmt(avDiv)}</span> versés · <span style="font-family:'JetBrains Mono',monospace;font-weight:600;">${fmt(c.tDiv-avDiv)}</span> restant</span>
+      </div>
+    </div>
+  `;
   renderLivrables();
   renderTimeline();
 }
 
 function renderTable(tbodyId,arr,key){
   const tbody=document.getElementById(tbodyId);
-  const hasAvance=key==='hono'||key==='logi';
+  const hasAvance=true;
   let html='';
   arr.forEach((r,i)=>{
     const total=(parseFloat(r.pu)||0)*(parseFloat(r.days)||0)*(parseFloat(r.perso)||0);
@@ -646,8 +724,8 @@ window.toggleLock=function(){
 
 window.addHono=function(){D.hono.push({id:uid(),name:'Nouveau profil',pu:0,days:1,perso:1,avance:0});renderAll();debounceSave();};
 window.addLogi=function(){D.logi.push({id:uid(),name:'Nouvel item',pu:0,days:1,perso:1,avance:0});renderAll();debounceSave();};
-window.addEquip=function(){D.equip.push({id:uid(),name:'Nouvel item',pu:0,days:1,perso:1});renderAll();debounceSave();};
-window.addDiv=function(){D.divers.push({id:uid(),name:'Nouvel item',pu:0,days:1,perso:1});renderAll();debounceSave();};
+window.addEquip=function(){D.equip.push({id:uid(),name:'Nouvel item',pu:0,days:1,perso:1,avance:0});renderAll();debounceSave();};
+window.addDiv=function(){D.divers.push({id:uid(),name:'Nouvel item',pu:0,days:1,perso:1,avance:0});renderAll();debounceSave();};
 
 // Avances
 window.delRow=function(key,id,name){
